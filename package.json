@@ -1,0 +1,51 @@
+{
+  "name": "smart-collection",
+  "description": "Smart generic collection with events.",
+  "preferGlobal": "false",
+  "version": "1.0.0",
+  "author": {
+    "name": "Marcello Gesmundo",
+    "email": "mgesmundo@yoovant.com",
+    "url": "http://www.yoovant.com"
+  },
+  "keywords": [
+    "collection",
+    "collections",
+    "events"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mgesmundo/smart-collection.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mgesmundo/smart-collection/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/test.js --reporter spec",
+    "cov": "mocha test/test.js --require blanket --reporter html-cov > test/coverage.html"
+  },
+  "dependencies": {
+    "debug": "2.0.0",
+    "underscore": "~1.7.0",
+    "underscore.string": "~2.3.3",
+    "fusing": "~0.3.2"
+  },
+  "devDependencies": {
+    "mocha": "~1.21.4",
+    "should": "~4.0.4",
+    "sinon": "~1.10.3",
+    "blanket": "~1.1.6"
+  },
+  "config": {
+    "blanket": {
+      "pattern": "smart-collection/lib/"
+    }
+  },
+  "analyze": false,
+  "license": "BSD",
+  "engines": {
+    "node": ">=0.10"
+  },
+  "readmeFilename": "README.md"
+}

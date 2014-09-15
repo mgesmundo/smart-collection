@@ -1,0 +1,112 @@
+/**
+ *
+ * @class smart_collection
+ * @singleton
+ *
+ * # Smart Collection
+ *
+ * Easy manipulation of generic collections of objects with events and predefined common useful methods.
+ *
+ * ## Features
+ *
+ *  - Create a collection identified by a name
+ *  - Emit an event on `add`, `remove`, `empty` and `flush` elements (every event has the `sender` collection)
+ *  - Emit also an event `before` and `after` for every addition and deletion
+ *  - Create custom views (subsets) of the items
+ *  - Add underscore tools functions as features applied to the items
+ *  - Protected properties and methods (can't override it for mistake).
+ *
+ * ## Example
+ *
+ *      // dependencies
+ *      var Collection = require('smart-collection');
+ *      // create new collection
+ *      var c = new Collection('mycollection');
+ *      // add some handlers
+ *      c.on('add', function add(sender, item) {
+ *        console.log('>>> add new item from ' + sender.name, item);
+ *      });
+ *      c.on('remove', function remove(sender, item) {
+ *        console.log('>>> removed item from ' + sender.name, item);
+ *      });
+ *      c.on('empty', function empty(sender) {
+ *        console.log('>>> there are no more items in ' + sender.name);
+ *      });
+ *      c.on('flush', function flush(sender) {
+ *        console.log('>>> flushed ' + sender.name);
+ *      });
+ *      // add an item
+ *      c.add({ name: 'John' });
+ *      // add two other items
+ *      c.add([
+ *        { name: 'Sam' },
+ *        { name: 'Pat' }
+ *      ]);
+ *      // show all items
+ *      console.log('all', c.all);
+ *      // create a custom view
+ *      c.addView('myView', function (){
+ *        // the first two items
+ *        return Array.prototype.slice.call(c.items, 0, 2);
+ *      });
+ *      console.log('myView', c.myView);
+ *      // add a feature
+ *      c.addFeature('filter');
+ *      // use a feature
+ *      console.log('direct', c.filter(function (item) {
+ *        return item.name.length === 3;
+ *      }));
+ *      // add a view using a feature
+ *      c.addView('myOtherView', function () {
+ *        return c.filter(function (item) {
+ *          return item.name.length === 3;
+ *        });
+ *      });
+ *      console.log('myOtherView', c.myOtherView);
+ *      c.removeAt(1);
+ *      console.log('myOtherView', c.myOtherView);
+ *      // remove an item
+ *      c.remove({ name: 'John' });
+ *      // flush all items
+ *      c.flush();
+ *      // manipulate the item before the add event
+ *      c.on('add-before', function (item) {
+ *        item.date = new Date();
+ *      });
+ *      c.add({ name: 'John' });
+ *      console.log(c.all);
+ *
+ * @author Marcello Gesmundo
+ *
+ * # License
+ *
+ * Copyright (c) 2014 Yoovant by Marcello Gesmundo. All rights reserved.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *    * Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *    * Redistributions in binary form must reproduce the above
+ *      copyright notice, this list of conditions and the following
+ *      disclaimer in the documentation and/or other materials provided
+ *      with the distribution.
+ *    * Neither the name of Yoovant nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+module.exports = require('./lib/smart-collection');
