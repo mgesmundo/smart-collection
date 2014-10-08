@@ -27,17 +27,17 @@ var Collection = require('smart-collection');
 // create new collection
 var c = new Collection('mycollection');
 // add some handlers
-c.on('add', function add(sender, item) {
-  console.log('>>> add new item from ' + sender.name, item);
+c.on('add', function add(item) {
+  console.log('>>> add new item from ' + c.name, item);
 });
 c.on('remove', function remove(sender, item) {
-  console.log('>>> removed item from ' + sender.name, item);
+  console.log('>>> removed item from ' + c.name, item);
 });
-c.on('empty', function empty(sender) {
-  console.log('>>> there are no more items in ' + sender.name);
+c.on('empty', function empty() {
+  console.log('>>> there are no more items in ' + c.name);
 });
-c.on('flush', function flush(sender) {
-  console.log('>>> flushed ' + sender.name);
+c.on('flush', function flush() {
+  console.log('>>> flushed ' + c.name);
 });
 // add an item
 c.add({ name: 'John' });
@@ -73,6 +73,19 @@ console.log('myOtherView', c.myOtherView);
 c.remove({ name: 'John' });
 // flush all items
 c.flush();
+c.on('add-cancel', function (item) {
+  console.log('cancel add for ' + item.name);
+});
+c.on('add-before', function add(item) {
+  if (item.name === 'Sam') {
+    this.cancel = true;
+  } else {
+    item.date = new Date();
+  }
+});
+c.add({ name: 'John' });
+c.add({ name: 'Sam' });
+console.log(c.all);
 ```
 
 ## API Reference
@@ -93,6 +106,10 @@ To run the coverage test type instead:
 ```bash
 $ npm run cov
 ```
+
+## Breaking changes
+
+Since the 2.0 version the signature of the events is changed. Please see documentation.
 
 ## License
 
