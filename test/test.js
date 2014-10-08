@@ -37,9 +37,8 @@ describe('Collection', function() {
     });
     it('should add an item', function(done) {
       var coll = new Collection('collection');
-      coll.on('add', function (sender, item) {
+      coll.on('add', function (item) {
         item.should.eql(item1);
-        sender.should.eql(coll);
         done();
       });
       coll.name.should.equal('collection');
@@ -117,13 +116,13 @@ describe('Collection', function() {
     it('manipulate an item before and after its removed', function(done) {
       var coll = new Collection();
       var id = Math.round(Math.random() * 1000);
-      coll.on('remove-before', function (sender, item) {
+      coll.on('remove-before', function (item) {
         item.id = id;
       });
-      coll.on('remove', function (sender, item) {
+      coll.on('remove', function (item) {
         item.id++;
       });
-      coll.on('remove-after', function (sender, item) {
+      coll.on('remove-after', function (item) {
         item.id.should.equal(id + 1);
       });
       var onEmpty = sinon.spy();
@@ -163,8 +162,7 @@ describe('Collection', function() {
       var onRemove = sinon.spy();
       coll.on('remove', onRemove);
       coll.on('empty', onEmpty);
-      coll.on('flush', function (sender) {
-        sender.should.eql(coll);
+      coll.on('flush', function () {
         onEmpty.calledOnce.should.true;
         onRemove.calledThrice.should.true;
         coll.items.should.instanceOf(Array).and.have.lengthOf(0);
@@ -238,6 +236,35 @@ describe('Collection', function() {
       (function () {
         coll.addView('myview');
       }).should.throw('function required');
+      done();
+    });
+    it('should cancel add event', function(done) {
+      var coll = new Collection();
+      var onCancel = sinon.spy();
+      coll.on('add-cancel', onCancel);
+      coll.on('add-before', function (item) {
+        if (item.a === 'a') {
+          this.cancel = true;
+        }
+      });
+      coll.add([item1, item3]);
+      coll.items.should.instanceOf(Array).and.have.lengthOf(1);
+      onCancel.calledOnce.should.true;
+      done();
+    });
+    it('should cancel remove event', function(done) {
+      var coll = new Collection();
+      var onCancel = sinon.spy();
+      coll.on('remove-cancel', onCancel);
+      coll.on('remove-before', function (item) {
+        if (item.a === 'a') {
+          this.cancel = true;
+        }
+      });
+      coll.add([item1, item3]);
+      coll.remove([item1, item3]);
+      coll.items.should.instanceOf(Array).and.have.lengthOf(1);
+      onCancel.calledOnce.should.true;
       done();
     });
   });
