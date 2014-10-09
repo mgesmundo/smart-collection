@@ -29,7 +29,7 @@
     "debug": "2.0.0",
     "underscore": "~1.7.0",
     "underscore.string": "~2.3.3",
-    "fusing": "~0.3.2"
+    "fusing": "~0.4.0"
   },
   "devDependencies": {
     "mocha": "~1.21.4",
