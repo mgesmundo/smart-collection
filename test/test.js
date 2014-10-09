@@ -5,18 +5,22 @@ var _ = require('underscore');
 var METHODS = require('../lib/methods');
 
 var item1 = {
+  name: 'item1',
   a: 'a',
   b: 'b'
 };
 var item2 = {
+  name: 'item2',
   c: 'c',
   d: 'd'
 };
 var item3 = {
+  name: 'item3',
   a: 'e',
   b: 'f'
 };
 var item4 = {
+  name: 'item4',
   a: 'a',
   b: 'f'
 };
@@ -105,7 +109,7 @@ describe('Collection', function() {
         .add(item2)
         .add(item3);
       coll.items.should.instanceOf(Array).and.have.lengthOf(3);
-      coll.remove({ c: 'c', d: 'd' });
+      coll.remove({ c: 'c', d: 'd', name: 'item2' });
       coll.items.should.instanceOf(Array).and.have.lengthOf(2);
       onAddBefore.calledThrice.should.true;
       onAddAfter.calledThrice.should.true;
@@ -129,7 +133,7 @@ describe('Collection', function() {
       coll.on('remove', onEmpty);
       coll.add(item1);
       coll.items.should.instanceOf(Array).and.have.lengthOf(1);
-      coll.remove({ a: 'a', b: 'b' });
+      coll.remove({ a: 'a', b: 'b', name: 'item1' });
       coll.items.should.instanceOf(Array).and.have.lengthOf(0);
       onEmpty.calledOnce.should.true;
       done();
@@ -146,7 +150,7 @@ describe('Collection', function() {
       coll.on('remove-after', onRemoveAfter);
       coll.add([item1, item2, item3]);
       coll.items.should.instanceOf(Array).and.have.lengthOf(3);
-      coll.remove([item1, { c: 'c', d: 'd' }]);
+      coll.remove([item1, { c: 'c', d: 'd', name: 'item2' }]);
       coll.items.should.instanceOf(Array).and.have.lengthOf(1);
       onAddBefore.calledThrice.should.true;
       onAddAfter.calledThrice.should.true;
@@ -242,9 +246,9 @@ describe('Collection', function() {
       var coll = new Collection();
       var onCancel = sinon.spy();
       coll.on('add-cancel', onCancel);
-      coll.on('add-before', function (item) {
+      coll.on('add-before', function (item, pause) {
         if (item.a === 'a') {
-          this.cancel = true;
+          pause(true);
         }
       });
       coll.add([item1, item3]);
@@ -256,12 +260,12 @@ describe('Collection', function() {
       var coll = new Collection();
       var onCancel = sinon.spy();
       coll.on('remove-cancel', onCancel);
-      coll.on('remove-before', function (item) {
+      coll.on('remove-before', function (item, pause) {
         if (item.a === 'a') {
-          this.cancel = true;
+          pause(true);
         }
       });
-      coll.add([item1, item3]);
+      coll.add([item1, item3, item3, item3]);
       coll.remove([item1, item3]);
       coll.items.should.instanceOf(Array).and.have.lengthOf(1);
       onCancel.calledOnce.should.true;
