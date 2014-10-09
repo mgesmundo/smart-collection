@@ -33,6 +33,7 @@ var debug = require('debug')('smart-collection');
  * @fires add-before
  * @fires add
  * @fires add-after
+ * @fires add-cancel
  * @chainable
  */
 function addAt(items, index) {
@@ -45,8 +46,16 @@ function addAt(items, index) {
         }
       }, this);
     } else {
-      this.emit('add-before', items);
-      if (!this.cancel) {
+      var self = this;
+      var paused = false;
+      function pause(cancel) {
+        if (cancel) {
+          self.emit('add-cancel', items);
+        }
+        paused = cancel;
+      }
+      this.emit('add-before', items, pause);
+      if (!paused) {
         if (!_.isNumber(index)) {
           debug('add last item %o', items);
           this.items.push(items);
@@ -59,10 +68,7 @@ function addAt(items, index) {
         }
         this.emit('add', items);
         this.emit('add-after', items);
-      } else {
-        this.emit('add-cancel', items);
       }
-      this.cancel = false;
     }
   }
   return this;
@@ -74,6 +80,7 @@ function addAt(items, index) {
  * @fires add-before
  * @fires add
  * @fires add-after
+ * @fires add-cancel
  * @chainable
  */
 function addFirst(items) {
@@ -91,11 +98,11 @@ function addFirst(items) {
  * coll.on('cancel', function (item) {
  *   console.log(item);       // {name: 'item1'}
  * });
- * coll.on('add-before', function (item) {
+ * coll.on('add-before', function (item, pause) {
  *   console.log('event');
  *   if (item.name === 'item1') {
  *     // break the add operation
- *     this.cancel = true;
+ *     pause(true);
  *   }
  * });
  *
@@ -110,39 +117,97 @@ function addFirst(items) {
  * @fires add-before
  * @fires add
  * @fires add-after
+ * @fires add-cancel
  * @chainable
  */
 function add(items) {
   return addAt.call(this, items);
 }
-<span id='smart_collection-Collection-method-removeAt'>/**
-</span> * Remove an item from the collection at a specific position.
- * @method removeAt
- * @param {Number} index The position.
+function doRemove(index) {
+  var item = this.items[index];
+  if (item) {
+    var paused = false;
+    var self = this;
+    function pause(cancel) {
+      if (cancel) {
+        self.emit('remove-cancel', item);
+      }
+      paused = cancel;
+    }
+    this.emit('remove-before', item, pause);
+    if (!paused) {
+      debug('remove item %o at position %d', item, index);
+      this.items.splice(index, 1);
+      this.emit('remove', item);
+      this.emit('remove-after', item);
+      if (_.size(this.items) === 0) {
+        this.emit('empty');
+      }
+      // remove any duplicate
+      index = this.items.indexOf(item);
+      doRemove.call(this, index);
+    }
+  }
+  return this;
+}
+<span id='global-method-_remove'>/**
+</span> * Remove an item(s) from the collection.
+ * @method _remove
+ * @param {Number|Array|Object} obj The position of the item or an array of objects or a single object.
  * @fires remove-before
  * @fires remove
  * @fires remove-after
+ * @fires remove-cancel
  * @chainable
+ * @private
+ * @ignore
  */
-function removeAt(index) {
-  if (_.isNumber(index)) {
+function _remove(obj) {
+  var item;
+  var index;
+  if (_.isNumber(obj)) {
+    index = obj;
     if (~index) {
-      var item = this.items[index];
-      this.emit('remove-before', item);
-      if (!this.cancel) {
-        debug('remove item %o at position %d', item, index);
-        this.items.splice(index, 1);
-        this.emit('remove', item);
-        this.emit('remove-after', item);
-        if (_.size(this.items) === 0) {
-          this.emit('empty');
-        }
+      doRemove.call(this, index);
+    }
+  } else {
+    var items = obj;
+    if (items) {
+      if (_.isArray(items)) {
+        _.each(items, function (item) {
+          _remove.call(this, item);
+        }, this);
       } else {
-        this.emit('remove-cancel', item);
+        item = items;
+        var found;
+        var i;
+        for (i = 0; i &lt; this.items.length; i++) {
+          if (_.isEqual(this.items[i], item)) {
+            found = this.items[i];
+            break;
+          }
+        }
+        if (found) {
+          index = _.indexOf(this.items, found);
+          doRemove.call(this, index);
+        }
       }
     }
   }
   return this;
+}
+<span id='smart_collection-Collection-method-removeAt'>/**
+</span> * Remove an item from the collection at a specific position.
+ * @method removeAt
+ * @param {Number} index The position of the item.
+ * @fires remove-before
+ * @fires remove
+ * @fires remove-after
+ * @fires remove-cancel
+ * @chainable
+ */
+function removeAt(index) {
+  _remove.call(this, index);
 }
 <span id='smart_collection-Collection-method-remove'>/**
 </span> * Remove an item(s) from the collection.
@@ -174,27 +239,11 @@ function removeAt(index) {
  * @fires remove-before
  * @fires remove
  * @fires remove-after
+ * @fires remove-cancel
  * @chainable
  */
 function remove(items) {
-  if (items) {
-    if (_.isArray(items)) {
-      _.each(items, function (item) {
-        remove.call(this, item);
-      }, this);
-    } else {
-      var found = _.findWhere(this.items, items);
-      if (found) {
-        removeAt.call(this, _.indexOf(this.items, found));
-        // remove any duplicates
-        if (!this.cancel) {
-          remove.call(this, items);
-        }
-        this.cancel = false;
-      }
-    }
-  }
-  return this;
+  return _remove.call(this, items);
 }
 <span id='smart_collection-Collection-method-removeFirst'>/**
 </span> * Remove first item from the collection.
@@ -213,6 +262,7 @@ function removeFirst() {
  * @fires remove-before
  * @fires remove
  * @fires remove-after
+ * @fires remove-cancel
  * @chainable
  */
 function removeLast() {
@@ -226,6 +276,7 @@ function removeLast() {
  * @fires remove-before
  * @fires remove
  * @fires remove-after
+ * @fires remove-cancel
  * @chainable
  */
 function removeRange(start, length) {
@@ -389,7 +440,11 @@ function Collection(name) {
 </span>   * @property {Array} items The entire collection of items.
    */
   this.readable('items', []);
-
+<span id='global-property-'>  /**
+</span>   * @private
+   * @ignore
+   */
+  this.readable('queue', []);
   // add default view
 <span id='smart_collection-Collection-property-all'>  /**
 </span>   * @property {Array} all The default view with all items.
@@ -424,6 +479,8 @@ module.exports = Collection;
 <span id='smart_collection-Collection-event-add-before'>/**
 </span> * @event add-before Fired before the add event.
  * @param {Object} item The new item.
+ * @param {Function} pause The callback to pause an add operation
+ * @param {Boolean} pause.cancel Invoke pause with `cancel = true` to cancel the add operation.
  */
 <span id='smart_collection-Collection-event-add'>/**
 </span> * @event add Fired when a new item is added to the collection.
@@ -435,12 +492,14 @@ module.exports = Collection;
  */
 <span id='smart_collection-Collection-event-add-cancel'>/**
 </span> * @event add-cancel Fired when an add event is canceled.
- * To do this use `this.cancel = true` in `add-before` handler.
- * @param {Object} item The new item.
+ * To do this use `pause(true)` in `add-before` handler.
+ * @param {Object} item The skipped item.
  */
 <span id='smart_collection-Collection-event-remove-before'>/**
 </span> * @event remove-before Fired before the remove event.
- * @param {Object} item The new item.
+ * @param {Object} item The removed item.
+ * @param {Function} pause The callback to pause a remove operation
+ * @param {Boolean} pause.cancel Invoke pause with `cancel = true` to cancel the remove operation.
  */
 <span id='smart_collection-Collection-event-remove'>/**
 </span> * @event remove Fired when an item is removed from the collection.
@@ -448,12 +507,12 @@ module.exports = Collection;
  */
 <span id='smart_collection-Collection-event-remove-after'>/**
 </span> * @event remove-after Fired after the remove event.
- * @param {Object} item The new item.
+ * To do this use `pause(true)` in `remove-before` handler.
+ * @param {Object} item The removed item.
  */
 <span id='smart_collection-Collection-event-remove-cancel'>/**
 </span> * @event remove-cancel Fired when a remove event is canceled.
- * To do this use `this.cancel = true` in `remove-before` handler.
- * @param {Object} item The new item.
+ * @param {Object} item The skipped item.
  */
 <span id='smart_collection-Collection-event-empty'>/**
 </span> * @event empty Fired when the collection became empty.
