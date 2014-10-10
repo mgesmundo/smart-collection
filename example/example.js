@@ -52,9 +52,9 @@ c.flush();
 c.on('add-cancel', function (item) {
   console.log('cancel add for ' + item.name);
 });
-c.on('add-before', function add(item, pause) {
+c.on('add-before', function add(item, next) {
   if (item.name === 'Sam') {
-    pause(true);
+    next.cancel();
   } else {
     item.date = new Date();
   }

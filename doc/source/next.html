@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">var _ = require('underscore');
+var fuse = require('fusing');
+var debug = require('debug')('synapsejs');
+
+function Next(ctx, op, item, index) {
+  this.fuse();
+  var _canceled = false;
+
+<span id='global-method-doRemove'>  /**
+</span>   * @ignore
+   * @private
+   */
+  function doRemove(idx) {
+    if (index === 0) {
+      debug('remove first item %o', item);
+    } else if (index === _.size(ctx.items) - 1) {
+      debug('remove last item %o', item);
+    } else {
+      debug('remove item %o at position %d', item, index);
+    }
+    ctx.items.splice(idx, 1);
+    ctx.emit('remove', item);
+    ctx.emit('remove-after', item);
+    if (_.size(ctx.items) === 0) {
+      ctx.emit('empty');
+    }
+  }
+  function cancel() {
+    debug('cancel %o item %o', op, item);
+    ctx.emit(op + '-cancel', item, resume.bind(this));
+    _canceled = true;
+  }
+  function resume() {
+    if (!_.isNumber(index)) {
+      if (op === 'add') {
+        debug('resume last item %o', item);
+      }
+    } else if (index === 0) {
+      debug('resume first item %o', item);
+    } else if (index === _.size(ctx.items) - 1) {
+      debug('resume last item %o', item);
+    }
+    if (_canceled) {
+      if (index &gt; 0 &amp;&amp; index &lt; (_.size(ctx.items) - 1)) {
+        throw new Error('unable to resume \'' + op + '\' at position ' + index);
+      }
+      ctx.emit(op + '-resume', item);
+      _canceled = false;
+      done();
+    }
+  }
+  function done() {
+    if (!_canceled) {
+      if (op === 'add') {
+        if (!_.isNumber(index)) {
+          debug('add last item %o', item);
+          ctx.items.push(item);
+        } else if (index === 0) {
+          debug('add first item %o', item);
+          ctx.items.unshift(item);
+        } else {
+          debug('add item %o at position %d', item, index);
+          ctx.items.splice(index, 0, item);
+        }
+        ctx.emit('add', item);
+        ctx.emit('add-after', item);
+      } else if (op === 'remove') {
+        var idx;
+        // remove any duplicate
+        while (~(idx = ctx.items.indexOf(item))) {
+          doRemove(idx);
+        }
+      }
+    }
+  }
+
+  // properties
+  this.readable('canceled', {
+    get: function get() {
+      return _canceled;
+    }
+  }, true);
+  // methods
+  this.readable('cancel', cancel);
+  this.readable('resume', resume);
+  this.readable('done', done);
+}
+
+fuse(Next, Object);
+
+module.exports = Next;
+</pre>
+</body>
+</html>
