@@ -41,7 +41,8 @@ describe('Collection', function() {
     });
     it('should add an item', function(done) {
       var coll = new Collection('collection');
-      coll.on('add', function (item) {
+      coll.on('add', function (sender, item) {
+        sender.should.equal(coll);
         item.should.eql(item1);
         done();
       });
@@ -248,7 +249,7 @@ describe('Collection', function() {
       var coll = new Collection();
       var onCancel = sinon.spy();
       coll.on('add-cancel', onCancel);
-      coll.on('add-before', function (item, next) {
+      coll.on('add-before', function (sender, item, next) {
         if (item.name === 'item1') {
           next.cancel();
         }
@@ -262,7 +263,7 @@ describe('Collection', function() {
       var coll = new Collection();
       var onCancel = sinon.spy();
       coll.on('remove-cancel', onCancel);
-      coll.on('remove-before', function (item, next) {
+      coll.on('remove-before', function (sender, item, next) {
         if (item.name === 'item1') {
           next.cancel();
         }
@@ -276,17 +277,17 @@ describe('Collection', function() {
     it('should cancel and resume add one item', function(done) {
       var coll = new Collection();
       var restoreItem;
-      var onCancel = sinon.spy(function (item, restore){
+      var onCancel = sinon.spy(function (sender, item, restore){
         item.should.equal(item1);
         restore.should.type('function');
         restoreItem = restore;
       });
-      var onResume = sinon.spy(function (item) {
+      var onResume = sinon.spy(function (sender, item) {
         item.should.equal(item1);
       });
       coll.on('add-resume', onResume);
       coll.on('add-cancel', onCancel);
-      coll.on('add-before', function (item, next) {
+      coll.on('add-before', function (sender, item, next) {
         if (item.name === 'item1') {
           next.cancel();
         } else {
@@ -302,11 +303,11 @@ describe('Collection', function() {
     });
     it('should cancel and resume remove last item', function(done) {
       var coll = new Collection();
-      var onCancel = sinon.spy(function (item, restore){
+      var onCancel = sinon.spy(function (sender, item, restore){
         item.should.equal(item2);
         restore.should.type('function');
       });
-      var onResume = sinon.spy(function (item) {
+      var onResume = sinon.spy(function (sender, item) {
         item.should.equal(item2);
       });
       var onRemove = sinon.spy();
@@ -315,7 +316,7 @@ describe('Collection', function() {
       coll.on('remove-cancel', onCancel);
       coll.on('remove', onRemove);
       coll.on('remove-after', onRemoveAfter);
-      coll.on('remove-before', function (item, next) {
+      coll.on('remove-before', function (sender, item, next) {
         if (item.name === 'item2') {
           next.cancel();
           process.nextTick(function () {
@@ -336,11 +337,11 @@ describe('Collection', function() {
     });
     it('should cancel and resume remove first item', function(done) {
       var coll = new Collection();
-      var onCancel = sinon.spy(function (item, restore){
+      var onCancel = sinon.spy(function (sender, item, restore){
         item.should.equal(item1);
         restore.should.type('function');
       });
-      var onResume = sinon.spy(function (item) {
+      var onResume = sinon.spy(function (sender, item) {
         item.should.equal(item1);
       });
       var onRemove = sinon.spy();
@@ -349,7 +350,7 @@ describe('Collection', function() {
       coll.on('remove-cancel', onCancel);
       coll.on('remove', onRemove);
       coll.on('remove-after', onRemoveAfter);
-      coll.on('remove-before', function (item, next) {
+      coll.on('remove-before', function (sender, item, next) {
         if (item.name === 'item1') {
           next.cancel();
           process.nextTick(function () {
@@ -370,7 +371,7 @@ describe('Collection', function() {
     });
     it('should cancel and not resume remove item at specific position', function(done) {
       var coll = new Collection();
-      var onCancel = sinon.spy(function (item, restore){
+      var onCancel = sinon.spy(function (sender, item, restore){
         item.should.equal(item2);
         restore.should.type('function');
       });
@@ -381,7 +382,7 @@ describe('Collection', function() {
       coll.on('remove-cancel', onCancel);
       coll.on('remove', onRemove);
       coll.on('remove-after', onRemoveAfter);
-      coll.on('remove-before', function (item, next) {
+      coll.on('remove-before', function (sender, item, next) {
         next.cancel();
         process.nextTick(function () {
           next.canceled.should.true;
