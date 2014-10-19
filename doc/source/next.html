@@ -36,15 +36,15 @@ function Next(ctx, op, item, index) {
       debug('remove item %o at position %d', item, index);
     }
     ctx.items.splice(idx, 1);
-    ctx.emit('remove', item);
-    ctx.emit('remove-after', item);
+    ctx.emit('remove', ctx, item);
+    ctx.emit('remove-after', ctx, item);
     if (_.size(ctx.items) === 0) {
-      ctx.emit('empty');
+      ctx.emit('empty', ctx);
     }
   }
   function cancel() {
     debug('cancel %o item %o', op, item);
-    ctx.emit(op + '-cancel', item, resume.bind(this));
+    ctx.emit(op + '-cancel', ctx, item, resume.bind(this));
     _canceled = true;
   }
   function resume() {
@@ -61,7 +61,7 @@ function Next(ctx, op, item, index) {
       if (index &gt; 0 &amp;&amp; index &lt; (_.size(ctx.items) - 1)) {
         throw new Error('unable to resume \'' + op + '\' at position ' + index);
       }
-      ctx.emit(op + '-resume', item);
+      ctx.emit(op + '-resume', ctx, item);
       _canceled = false;
       done();
     }
@@ -79,8 +79,8 @@ function Next(ctx, op, item, index) {
           debug('add item %o at position %d', item, index);
           ctx.items.splice(index, 0, item);
         }
-        ctx.emit('add', item);
-        ctx.emit('add-after', item);
+        ctx.emit('add', ctx, item);
+        ctx.emit('add-after', ctx, item);
       } else if (op === 'remove') {
         var idx;
         // remove any duplicate

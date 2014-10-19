@@ -48,10 +48,9 @@ function addAt(items, index) {
         }
       }, this);
     } else {
-      var self = this;
       var item = items;
-      var next = new Next(self, 'add', item, index);
-      this.emit('add-before', item, next);
+      var next = new Next(this, 'add', item, index);
+      this.emit('add-before', this, item, next);
       next.done();
     }
   }
@@ -118,7 +117,7 @@ function doRemove(index) {
     var item = this.items[index];
     if (item) {
       var next = new Next(this, 'remove', item, index);
-      this.emit('remove-before', item, next);
+      this.emit('remove-before', this, item, next);
       next.done();
     }
   }
@@ -266,10 +265,12 @@ function removeRange(start, length) {
  */
 function flush(){
   debug('flush');
+  this.on('empty', function () {
+    this.emit('flush', this);
+  });
   while (this.items.length &gt; 0) {
     this.removeLast();
   }
-  this.emit('flush');
   return this;
 }
 <span id='smart_collection-Collection-method-addView'>/**
@@ -443,6 +444,7 @@ module.exports = Collection;
 
 <span id='smart_collection-Collection-event-add-before'>/**
 </span> * @event add-before Fired before the add event.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The new item.
  * @param {Function} next The callback to cancel or resume an add operation.
  * @param {Function} next.cancel Call this to cancel the add operation.
@@ -450,23 +452,28 @@ module.exports = Collection;
  */
 <span id='smart_collection-Collection-event-add'>/**
 </span> * @event add Fired when a new item is added to the collection.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The new item.
  */
 <span id='smart_collection-Collection-event-add-after'>/**
 </span> * @event add-after Fired after the add event.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The new item.
  */
 <span id='smart_collection-Collection-event-add-cancel'>/**
 </span> * @event add-cancel Fired when an add event is canceled.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The skipped item.
  * @param {Object} resume The resume callback. Call this to resume the previous canceled add operation.
  */
 <span id='smart_collection-Collection-event-add-resume'>/**
 </span> * @event add-resume Fired when an add event is resumed after a cancel.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The resumed item.
  */
 <span id='smart_collection-Collection-event-remove-before'>/**
 </span> * @event remove-before Fired before the remove event.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The removed item.
  * @param {Function} next The callback to cancel or resume a remove operation.
  * @param {Function} next.cancel Call this to cancel the remove operation.
@@ -474,26 +481,32 @@ module.exports = Collection;
  */
 <span id='smart_collection-Collection-event-remove'>/**
 </span> * @event remove Fired when an item is removed from the collection.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The removed item.
  */
 <span id='smart_collection-Collection-event-remove-after'>/**
 </span> * @event remove-after Fired after the remove event.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The removed item.
  */
 <span id='smart_collection-Collection-event-remove-cancel'>/**
 </span> * @event remove-cancel Fired when a remove event is canceled.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The skipped item.
  * @param {Object} resume The resume callback. Call this to resume the previous canceled remove operation.
  */
 <span id='smart_collection-Collection-event-remove-resume'>/**
 </span> * @event remove-resume Fired when a remove event is resumed after a cancel.
+ * @param {Collection} sender The collection that fired the event.
  * @param {Object} item The resumed item.
  */
 <span id='smart_collection-Collection-event-empty'>/**
 </span> * @event empty Fired when the collection became empty.
+ * @param {Collection} sender The collection that fired the event.
  */
 <span id='smart_collection-Collection-event-flush'>/**
 </span> * @event flush Fired when the collection is flushed and after the empty event.
+ * @param {Collection} sender The collection that fired the event.
  */
 </pre>
 </body>
