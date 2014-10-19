@@ -265,11 +265,15 @@ function removeRange(start, length) {
  */
 function flush(){
   debug('flush');
-  this.on('empty', function () {
+  if (this.items.length &gt; 0) {
+    this.once('empty', function () {
+      this.emit('flush', this);
+    });
+    while (this.items.length &gt; 0) {
+      this.removeLast();
+    }
+  } else {
     this.emit('flush', this);
-  });
-  while (this.items.length &gt; 0) {
-    this.removeLast();
   }
   return this;
 }

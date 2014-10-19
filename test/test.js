@@ -177,6 +177,17 @@ describe('Collection', function() {
       });
       coll.flush();
     });
+    it('should emit flush event on empty collection', function(done) {
+      var coll = new Collection();
+      var onEmpty = sinon.spy();
+      coll.on('empty', onEmpty);
+      coll.on('flush', function () {
+        onEmpty.called.should.false;
+        coll.items.should.instanceOf(Array).and.have.lengthOf(0);
+        done();
+      });
+      coll.flush();
+    });
     it('should remove item at position', function(done) {
       var coll = new Collection();
       coll.add([item1, item2, item3, item4]);
