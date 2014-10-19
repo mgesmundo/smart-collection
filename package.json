@@ -2,7 +2,7 @@
   "name": "smart-collection",
   "description": "Smart generic collection with events.",
   "preferGlobal": "false",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "author": {
     "name": "Marcello Gesmundo",
     "email": "mgesmundo@yoovant.com",
